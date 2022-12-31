@@ -1,5 +1,6 @@
 ﻿namespace BattleshipGame.Models.Grid
 {
+    using Ship.Contracts;
     using Contracts;
 
     public class Grid : IGrid
@@ -7,24 +8,32 @@
         private static int gridRows = 21;
         private static int gridCols = 21;
 
-        public Dictionary<string, int> Boundaries { get; private set; }
+        public IReadOnlyDictionary<string, int> Boundaries { get; private set; }
+
+        private List<Cell> freeCells;
+
+        public IReadOnlyCollection<Cell> FreeCells => freeCells.AsReadOnly();
+
+        public List<IShip> Ships { get; private set; }
 
         public Grid(int left, int top)
         {
             Boundaries = new Dictionary<string, int>() {
                 { "top", top },
                 { "left", left },
-                { "right", left },
-                { "bottom", top }
+                { "right", left + gridCols },
+                { "bottom", top + gridRows }
             };
+            freeCells = new List<Cell>();
+            Ships = new List<IShip>();
         }
 
-        public List<(int x, int y)> Draw()
+        public void Draw()
         {
             var rows = gridRows;
             var cols = gridCols;
-
-            var emptyCells = new List<(int x, int y)>();
+            var colTracker = Boundaries["left"];
+            var rowTracker = Boundaries["top"];
 
             Console.SetCursorPosition(Boundaries["left"], Boundaries["top"]);
 
@@ -36,17 +45,14 @@
                     Console.Write(symbol);
                     if (symbol == " ")
                     {
-                        emptyCells.Add((Boundaries["right"], Boundaries["bottom"]));
+                        freeCells.Add(new Cell(colTracker, rowTracker));
                     }
-                    Boundaries["right"] += 1;
+                    colTracker += 1;
                 }
-                Boundaries["bottom"] += 1;
-                Boundaries["right"] = Boundaries["left"];
-                Console.SetCursorPosition(Boundaries["left"], Boundaries["bottom"]);
+                rowTracker += 1;
+                colTracker = Boundaries["left"];
+                Console.SetCursorPosition(Boundaries["left"], rowTracker);
             }
-
-            Boundaries["right"] += gridCols;
-            return emptyCells;
         }
 
         private static string GetSymbol(int row, int col)

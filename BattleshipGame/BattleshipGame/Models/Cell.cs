@@ -1,6 +1,6 @@
 ﻿namespace BattleshipGame.Models
 {
-    public class Cell
+    public class Cell : IEquatable<Cell>
     {
         public int X { get; set; }
 
@@ -25,6 +25,27 @@
         {
             Console.SetCursorPosition(X, Y);
             Console.Write(" ");
+        }
+
+        public bool Equals(Cell? other)
+        {
+            if (other == null) return false;
+            return X == other.X && Y == other.Y;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj == null) return false;
+
+            var other = obj as Cell;
+            if (other == null) return false;
+
+            return Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return X.GetHashCode() + Y.GetHashCode();
         }
     }
 }
