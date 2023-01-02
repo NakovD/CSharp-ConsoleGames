@@ -44,6 +44,30 @@
             }
         }
 
+        public List<Cell> CalculateNextMoveCoordinates(Direction direction)
+        {
+            if (IsPositioned) return null;
+
+            var nextMoveCoordinates = new List<Cell>();
+
+            Coordinates.ForEach(c =>
+            {
+                var newCell = new Cell(c.X, c.Y);
+                nextMoveCoordinates.Add(newCell);
+            });
+
+            var isMoveOutsideTheGrid = ValidateMove(direction);
+
+            if (isMoveOutsideTheGrid) return nextMoveCoordinates;
+
+            if (direction == Direction.Right) nextMoveCoordinates.ForEach(cell => cell.X += step);
+            else if (direction == Direction.Left) nextMoveCoordinates.ForEach(cell => cell.X -= step);
+            else if (direction == Direction.Up) nextMoveCoordinates.ForEach(cell => cell.Y -= step);
+            else nextMoveCoordinates.ForEach(cell => cell.Y += step);
+
+            return nextMoveCoordinates;
+        }
+
         public void Move(Direction direction)
         {
             if (IsPositioned) return;

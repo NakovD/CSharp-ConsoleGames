@@ -27,13 +27,13 @@
             Console.Write(" ");
         }
 
-        public bool Equals(Cell? other)
+        public bool Equals(Cell other)
         {
             if (other == null) return false;
             return X == other.X && Y == other.Y;
         }
 
-        public override bool Equals(object? obj)
+        public override bool Equals(object obj)
         {
             if (obj == null) return false;
 
