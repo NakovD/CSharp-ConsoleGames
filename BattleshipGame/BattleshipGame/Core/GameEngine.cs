@@ -39,7 +39,6 @@
             var centerX = (Console.WindowWidth - (gridCols * 2) - spaceBetweenGrids / 2) / 2;
             var centerY = ((Console.WindowHeight - gridRows) / 2);
 
-
             var playerGrid = new Grid(centerX, centerY);
             playerGrid.Draw();
 
@@ -85,20 +84,18 @@
             while (true)
             {
                 ship.SetBackgroundColor();
-                var key = Console.ReadKey().Key;
 
-                var direction = Direction.Up;
+                var (_direction, isEnterKey) = ReadPressedKey();
 
-                if (key == ConsoleKey.UpArrow) direction = Direction.Up;
-                if (key == ConsoleKey.DownArrow) direction = Direction.Down;
-                if (key == ConsoleKey.LeftArrow) direction = Direction.Left;
-                if (key == ConsoleKey.RightArrow) direction = Direction.Right;
-
-                if (key == ConsoleKey.Enter)
+                if (isEnterKey)
                 {
                     if (shipOverlap) continue;
                     ship.Lock(); break;
                 }
+
+                if (_direction == null) continue;
+
+                var direction = (Direction)_direction;
 
                 var nextShipCoordinates = ship.CalculateNextMoveCoordinates(direction);
 
@@ -119,6 +116,21 @@
                 ship.Move(direction);
                 playerGrid.Ships.ForEach(s => (s as Ship)?.Draw());
             }
+        }
+
+        private (Direction? direction, bool isEnterKey) ReadPressedKey()
+        {
+            var key = Console.ReadKey().Key;
+
+            if (key == ConsoleKey.UpArrow) return (Direction.Up, false);
+            else if (key == ConsoleKey.DownArrow) return (Direction.Down, false);
+            else if (key == ConsoleKey.LeftArrow) return (Direction.Left, false);
+            else if (key == ConsoleKey.RightArrow) return (Direction.Right, false);
+
+            else if (key == ConsoleKey.Enter) return (null, true);
+
+            return (null, false);
+
         }
 
         private void HandleOverlapingShipsDrawing(Ship ship, List<IShip> overlappingShips, List<IShip> allShips)
