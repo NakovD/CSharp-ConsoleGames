@@ -1,15 +1,9 @@
 ﻿namespace BattleshipGame.Models.Grid.Contracts
 {
-    using Ship.Contracts;
+    using BattleshipGame.Contracts;
 
-    public interface IGrid
+    public interface IGrid : IDrawable
     {
         IReadOnlyDictionary<string, int> Boundaries { get; }
-
-        IReadOnlyCollection<Cell> FreeCells { get; }
-
-        List<IShip> Ships { get; }
-
-        void Draw();
     }
 }
