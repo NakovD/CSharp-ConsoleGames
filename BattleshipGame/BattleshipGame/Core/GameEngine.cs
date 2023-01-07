@@ -42,16 +42,20 @@
             var playerGrid = new Grid(centerX, centerY);
             playerGrid.Draw();
 
-            var opponentGrid = new Grid(centerX + spaceBetweenGrids, centerY);
+            var opponentGrid = new AIGrid(centerX + spaceBetweenGrids, centerY);
             opponentGrid.Draw();
 
-            var playerShips = GetShips(playerGrid.Boundaries);
+            //var playerShips = GetShips(playerGrid.Boundaries);
 
-            foreach (var ship in playerShips)
-            {
-                PositionShip(ship, playerGrid);
-                playerGrid.Ships.Add(ship);
-            }
+            //foreach (var ship in playerShips)
+            //{
+            //    PositionShip(ship, playerGrid);
+            //    playerGrid.Ships.Add(ship);
+            //}
+
+            opponentGrid.GenerateShips(shipTypes);
+
+            Console.ReadLine();
         }
 
         private List<Ship> GetShips(IReadOnlyDictionary<string, int> boundaries)
@@ -114,7 +118,7 @@
 
                 shipOverlap = false;
                 ship.Move(direction);
-                playerGrid.Ships.ForEach(s => (s as Ship)?.Draw());
+                playerGrid.Ships.ForEach(s => s.Draw());
             }
         }
 
@@ -133,16 +137,14 @@
 
         }
 
-        private void HandleOverlapingShipsDrawing(Ship ship, List<IShip> overlappingShips, List<IShip> allShips)
+        private void HandleOverlapingShipsDrawing(Ship ship, List<Ship> overlappingShips, List<Ship> allShips)
         {
-
             overlappingShips.ForEach(s =>           //From the overlaping ships draw only the not overlaping cells
             {
                 s.Coordinates.Except(ship.Coordinates).ToList().ForEach(c => c.Draw());
             });
             var notOverlapingShips = allShips.Except(overlappingShips).ToList();
-            notOverlapingShips.ForEach(s => (s as Ship)?.Draw());
+            notOverlapingShips.ForEach(s => s.Draw());
         }
-
     }
 }
