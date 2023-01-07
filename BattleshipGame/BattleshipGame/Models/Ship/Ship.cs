@@ -6,7 +6,7 @@
     using System.Collections.Generic;
     using System;
 
-    public class Ship : IShip
+    public class Ship : IPlayerShip
     {
         private IReadOnlyDictionary<string, int> boundaries;
 

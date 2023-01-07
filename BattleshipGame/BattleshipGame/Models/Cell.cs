@@ -1,6 +1,8 @@
 ﻿namespace BattleshipGame.Models
 {
-    public class Cell : IEquatable<Cell>
+    using BattleshipGame.Contracts;
+
+    public class Cell : IEquatable<Cell>, IDrawable, IClearable
     {
         public int X { get; set; }
 
