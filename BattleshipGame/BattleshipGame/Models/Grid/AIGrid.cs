@@ -46,8 +46,8 @@
         {
             while (true)
             {
-                var firstShipCellX = random.Next(Boundaries["left"] + 1, Boundaries["right"]);
-                var firstShipCellY = random.Next(Boundaries["top"] + 1, Boundaries["bottom"]);
+                var firstShipCellX = random.Next(Boundaries["left"], Boundaries["right"]);
+                var firstShipCellY = random.Next(Boundaries["top"], Boundaries["bottom"]);
                 firstShipCellX = firstShipCellX % 2 != 0 ? firstShipCellX + 1 : firstShipCellX;
                 firstShipCellY = firstShipCellY % 2 != 0 ? firstShipCellY + 1 : firstShipCellY;
                 var axis = random.Next(1, 3);
@@ -65,11 +65,13 @@
             var horizontal = axis == 1;
             var lastShipCell = horizontal ? firstShipCellX + shipLength * 2 : firstShipCellY + shipLength * 2;
 
-            var isShipGonnaBeOutsideTheGrid = horizontal ?
+            var willShipEndOutsideGrid = horizontal ?
                 lastShipCell >= Boundaries["right"]
                 : lastShipCell >= Boundaries["bottom"];
 
-            if (isShipGonnaBeOutsideTheGrid) return false;
+            var isShipOutSideGrid = horizontal ? firstShipCellY >= Boundaries["bottom"] : firstShipCellX >= Boundaries["right"];
+
+            if (willShipEndOutsideGrid || isShipOutSideGrid) return false;
 
             var end = shipLength * 2;
 
