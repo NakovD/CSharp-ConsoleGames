@@ -6,6 +6,8 @@
 
         int Length { get; }
 
+        int TimesHit { get; }
+
         List<Cell> Coordinates { get; }
     }
 }

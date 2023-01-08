@@ -6,26 +6,17 @@
     using System.Collections.Generic;
     using System;
 
-    public class Ship : IPlayerShip
+    public class Ship : BaseShip, IPlayerShip
     {
         private IReadOnlyDictionary<string, int> boundaries;
 
         private const int step = 2;
 
-        public string Name { get; private set; }
-
-        public int Length { get; private set; }
-
-        public List<Cell> Coordinates { get; private set; }
-
         public bool IsPositioned { get; private set; }
 
-        public Ship(string name, int length, IReadOnlyDictionary<string, int> boundaries)
+        public Ship(string name, int length, IReadOnlyDictionary<string, int> boundaries) : base(name, length)
         {
-            Name = name;
             this.boundaries = boundaries;
-            Length = length;
-            Coordinates = new List<Cell>();
 
             CreateShip();
             SetBackgroundColor();
