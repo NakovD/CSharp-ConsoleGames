@@ -35,7 +35,6 @@
                     var cell = new Cell(x, y);
                     AIship.Coordinates.Add(cell);
                     Console.BackgroundColor = ConsoleColor.Red;
-                    cell.Draw();
                 }
 
                 Ships.Add(AIship);

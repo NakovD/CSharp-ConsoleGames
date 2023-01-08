@@ -4,28 +4,35 @@
 
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     public abstract class BaseGrid: IGrid
     {
-        private static int gridRows = 21;
-        private static int gridCols = 21;
+        public static readonly int GridRows = 21;
+
+        public static readonly int GridCols = 21;
 
         public IReadOnlyDictionary<string, int> Boundaries { get; private set; }
+
+        private List<Cell> freeCells;
+
+        public IReadOnlyCollection<Cell> FreeCells => freeCells.AsReadOnly();
 
         public BaseGrid(int left, int top)
         {
             Boundaries = new Dictionary<string, int>() {
                 { "top", top },
                 { "left", left },
-                { "right", left + gridCols },
-                { "bottom", top + gridRows }
+                { "right", left + GridCols },
+                { "bottom", top + GridRows }
             };
+            freeCells = new List<Cell>();
         }
 
         public void Draw()
         {
-            var rows = gridRows;
-            var cols = gridCols;
+            var rows = GridRows;
+            var cols = GridCols;
             var colTracker = Boundaries["left"];
             var rowTracker = Boundaries["top"];
 
@@ -36,6 +43,10 @@
                 for (int col = 0; col < cols; col++)
                 {
                     string symbol = GetSymbol(row, col);
+                    if (symbol == " ")
+                    {
+                        freeCells.Add(new Cell(Boundaries["left"] + col, Boundaries["top"] + row));
+                    }
                     Console.Write(symbol);
                     colTracker += 1;
                 }
@@ -47,8 +58,8 @@
 
         private static string GetSymbol(int row, int col)
         {
-            var rows = gridRows - 1;
-            var cols = gridCols - 1;
+            var rows = GridRows - 1;
+            var cols = GridCols - 1;
 
             if (row == 0 && col == 0) return "\u250C";  //top left corner
             if (row == 0 && col == cols) return "\u2510"; //top right corner

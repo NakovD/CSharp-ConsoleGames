@@ -5,5 +5,7 @@
     public interface IGrid : IDrawable
     {
         IReadOnlyDictionary<string, int> Boundaries { get; }
+
+        IReadOnlyCollection<Cell> FreeCells { get; }
     }
 }
