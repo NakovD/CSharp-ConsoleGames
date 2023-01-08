@@ -11,10 +11,25 @@
     using System;
     using BattleshipGame.Models.Ship.Contracts;
     using System.Collections.ObjectModel;
+    using BattleshipGame.Models.Grid.Contracts;
 
     public class GameEngine
     {
         private bool shipOverlap;
+
+        private bool gameOver;
+
+        private int winner = 0;
+
+        private Grid playerGrid;
+
+        private AIGrid AIGrid;
+
+        private List<Cell> AIAttackedCells;
+
+        private PlayerAttackMarker attackMarker;
+
+        private Random random;
 
         private static readonly IReadOnlyDictionary<string, int> shipTypes
             = new ReadOnlyDictionary<string, int>(new Dictionary<string, int>()
@@ -26,14 +41,146 @@
             { "Destroyer", 2 },
         });
 
+        public GameEngine()
+        {
+            AIAttackedCells = new List<Cell>();
+            random = new Random();
+        }
+
         public void Run()
         {
-            ConsoleSetup.Configure();
-            Console.InputEncoding = Encoding.Unicode;
-            Console.CursorVisible = false;
+            InitialPreparation();
 
-            var gridCols = 21;
-            var gridRows = 21;
+            DrawGrids();
+
+            StartPhaseOne();
+
+            AIGrid.GenerateShips(shipTypes);
+
+            StartAttackingPhase();
+
+            Console.Clear();
+            Console.SetCursorPosition(0, 0);
+            Console.WriteLine("Game ended!");
+            var winnerString = winner == 0 ? "AI" : "You";
+            Console.WriteLine($"Winner: {winnerString}");
+            Console.ReadLine();
+        }
+
+        private void StartAttackingPhase()
+        {
+            var attackMarkerInitialX = AIGrid.FreeCells.First().X;
+            var attackMarkerInitialY = AIGrid.FreeCells.First().Y;
+            attackMarker = new PlayerAttackMarker(attackMarkerInitialX, attackMarkerInitialY);
+
+            while (!gameOver)
+            {
+                var isPlayerTurnSuccessfull = ExecutePlayerTurn();
+                if (!isPlayerTurnSuccessfull) continue;
+                ExecuteAITurn();
+                ValidateGameState();
+            }
+        }
+
+        private void ValidateGameState()
+        {
+            var playerLost = playerGrid.Ships.All(s => s.TimesHit == s.Length);
+            if (playerLost)
+            {
+                gameOver = true; winner = 0; return;
+            }
+            var AILost = AIGrid.Ships.All(s => s.TimesHit == s.Length);
+            if (AILost)
+            {
+                gameOver = true; winner = 1; return;
+            }
+        }
+
+        private void ExecuteAITurn()
+        {
+            var availableCells = playerGrid.FreeCells.Except(AIAttackedCells).ToList();
+            var randomCellIndex = random.Next(0, availableCells.Count);
+            var neededCell = availableCells[randomCellIndex];
+            var shipStruck = playerGrid.Ships.SingleOrDefault(s => s.Coordinates.Any(c => c.Equals(neededCell)));
+            var charToWrite = "O";
+            if (shipStruck != null)
+            {
+                charToWrite = "X";
+                shipStruck.Hit();
+                Console.BackgroundColor = ConsoleColor.DarkRed;
+            }
+            neededCell.Symbol = charToWrite;
+            neededCell.Draw();
+            AIAttackedCells.Add(neededCell);
+        }
+
+        private bool ExecutePlayerTurn()
+        {
+            var (direction, isEnterPressed) = ReadPressedKey();
+
+            var currentCell = AIGrid.FreeCells.Single(c => c.X == attackMarker.X && c.Y == attackMarker.Y);
+
+            if (isEnterPressed)
+            {
+                AttackCell(currentCell); return true;
+            }
+
+            var (nextX, nextY) = GetNextMarkerCoordinates(direction);
+
+            var neededCell = AIGrid.FreeCells.SingleOrDefault(c => c.X == nextX && c.Y == nextY);
+            if (neededCell == null) return false;
+
+            attackMarker.UpdateCoordinates(nextX, nextY);
+            Console.BackgroundColor = ConsoleColor.Magenta;
+            neededCell.Draw();
+            Console.ResetColor();
+            currentCell.Draw();
+
+            return false;
+        }
+
+        private void AttackCell(Cell currentCell)
+        {
+            var shipStruck = AIGrid.Ships.SingleOrDefault(s => s.Coordinates.Any(c => c.Equals(currentCell)));
+            var charToWrite = "O";
+            if (shipStruck != null)
+            {
+                charToWrite = "X";
+                shipStruck.Hit();
+            }
+            currentCell.Symbol = charToWrite;
+            Console.BackgroundColor = ConsoleColor.Magenta;
+            currentCell.Draw();
+
+            Console.ResetColor();
+        }
+
+        private (int nextX, int nextY) GetNextMarkerCoordinates(Direction? direction)
+        {
+            switch (direction)
+            {
+                case Direction.Up: return (attackMarker.X, attackMarker.Y - 2);
+                case Direction.Right: return (attackMarker.X + 2, attackMarker.Y);
+                case Direction.Down: return (attackMarker.X, attackMarker.Y + 2);
+                default: return (attackMarker.X - 2, attackMarker.Y);
+            }
+        }
+
+        private void StartPhaseOne()
+        {
+            var playerShips = GetShips(playerGrid.Boundaries);
+
+            foreach (var ship in playerShips)
+            {
+                PositionShip(ship, playerGrid);
+                playerGrid.Ships.Add(ship);
+            }
+        }
+
+        private void DrawGrids()
+        {
+            var gridRows = BaseGrid.GridRows;
+            var gridCols = BaseGrid.GridCols;
 
             var spaceBetweenGrids = 30;
             var centerX = (Console.WindowWidth - (gridCols * 2) - spaceBetweenGrids / 2) / 2;
@@ -45,17 +192,16 @@
             var opponentGrid = new AIGrid(centerX + spaceBetweenGrids, centerY);
             opponentGrid.Draw();
 
-            //var playerShips = GetShips(playerGrid.Boundaries);
+            this.playerGrid = playerGrid;
+            this.AIGrid = opponentGrid;
 
-            //foreach (var ship in playerShips)
-            //{
-            //    PositionShip(ship, playerGrid);
-            //    playerGrid.Ships.Add(ship);
-            //}
+        }
 
-            opponentGrid.GenerateShips(shipTypes);
-
-            Console.ReadLine();
+        private void InitialPreparation()
+        {
+            ConsoleSetup.Configure();
+            Console.InputEncoding = Encoding.Unicode;
+            Console.CursorVisible = false;
         }
 
         private List<Ship> GetShips(IReadOnlyDictionary<string, int> boundaries)

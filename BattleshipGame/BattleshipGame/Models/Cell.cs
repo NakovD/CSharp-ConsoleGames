@@ -8,10 +8,13 @@
 
         public int Y { get; set; }
 
+        public string Symbol { get; set; }
+
         public Cell(int x, int y)
         {
             X = x;
             Y = y;
+            Symbol = " ";
         }
 
         public void Clear()
@@ -19,14 +22,14 @@
             var usedColor = Console.BackgroundColor;
             Console.SetCursorPosition(X, Y);
             Console.ResetColor();
-            Console.Write(" ");
+            Console.Write(Symbol);
             Console.BackgroundColor = usedColor;
         }
 
         public void Draw()
         {
             Console.SetCursorPosition(X, Y);
-            Console.Write(" ");
+            Console.Write(Symbol);
         }
 
         public bool Equals(Cell other)
