@@ -116,7 +116,9 @@
 
         private bool ExecutePlayerTurn()
         {
-            var (direction, isEnterPressed) = ReadPressedKey();
+            var (direction, isEnterPressed, isSpacePressed) = ReadPressedKey();
+
+            if (isSpacePressed) return false;
 
             var currentCell = AIGrid.FreeCells.Single(c => c.X == attackMarker.X && c.Y == attackMarker.Y);
 
@@ -162,7 +164,8 @@
                 case Direction.Up: return (attackMarker.X, attackMarker.Y - 2);
                 case Direction.Right: return (attackMarker.X + 2, attackMarker.Y);
                 case Direction.Down: return (attackMarker.X, attackMarker.Y + 2);
-                default: return (attackMarker.X - 2, attackMarker.Y);
+                case Direction.Left: return (attackMarker.X - 2, attackMarker.Y);
+                default: return (attackMarker.X, attackMarker.Y);
             }
         }
 
@@ -235,7 +238,9 @@
             {
                 ship.SetBackgroundColor();
 
-                var (_direction, isEnterKey) = ReadPressedKey();
+                var (_direction, isEnterKey, isSpaceKey) = ReadPressedKey();
+
+                if (isSpaceKey) { ship.Rotate(); continue; }
 
                 if (isEnterKey)
                 {
@@ -268,18 +273,20 @@
             }
         }
 
-        private (Direction? direction, bool isEnterKey) ReadPressedKey()
+        private (Direction? direction, bool isEnterKey, bool isSpaceKey) ReadPressedKey()
         {
-            var key = Console.ReadKey().Key;
+            var key = Console.ReadKey(true).Key;
 
-            if (key == ConsoleKey.UpArrow) return (Direction.Up, false);
-            else if (key == ConsoleKey.DownArrow) return (Direction.Down, false);
-            else if (key == ConsoleKey.LeftArrow) return (Direction.Left, false);
-            else if (key == ConsoleKey.RightArrow) return (Direction.Right, false);
+            if (key == ConsoleKey.UpArrow) return (Direction.Up, false, false);
+            else if (key == ConsoleKey.DownArrow) return (Direction.Down, false, false);
+            else if (key == ConsoleKey.LeftArrow) return (Direction.Left, false, false);
+            else if (key == ConsoleKey.RightArrow) return (Direction.Right, false, false);
 
-            else if (key == ConsoleKey.Enter) return (null, true);
+            else if (key == ConsoleKey.Enter) return (null, true, false);
 
-            return (null, false);
+            else if (key == ConsoleKey.Spacebar) return (null, false, true);
+
+            return (null, false, false);
 
         }
 

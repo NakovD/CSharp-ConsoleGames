@@ -5,8 +5,9 @@
 
     using System.Collections.Generic;
     using System;
+    using BattleshipGame.Contracts;
 
-    public class Ship : BaseShip, IPlayerShip
+    public class Ship : BaseShip, IPlayerShip, IRotatable
     {
         private IReadOnlyDictionary<string, int> boundaries;
 
@@ -14,12 +15,16 @@
 
         public bool IsPositioned { get; private set; }
 
+        public Axis Axis { get; private set; }
+
         public Ship(string name, int length, IReadOnlyDictionary<string, int> boundaries) : base(name, length)
         {
             this.boundaries = boundaries;
 
             CreateShip();
             SetBackgroundColor();
+
+            Axis = Axis.Y;
         }
 
         private void CreateShip()
@@ -109,6 +114,34 @@
         public void SetBackgroundColor(ConsoleColor bgColor = ConsoleColor.Gray)
         {
             Console.BackgroundColor = bgColor;
+        }
+
+        public void Rotate()
+        {
+            Clear();
+            Axis = Axis == Axis.X ? Axis.Y : Axis.X;
+            var isHorizontal = Axis == Axis.X;
+
+            var firstCell = Coordinates.First();
+            var index = 0;
+            var isOutSide = false;
+            if (isHorizontal)
+            {
+                index = firstCell.X;
+                isOutSide = index + Coordinates.Count * 2 >= boundaries["right"];
+            }
+            else
+            {
+                index = firstCell.Y;
+                isOutSide = index + Coordinates.Count * 2 >= boundaries["bottom"];
+            }
+            Coordinates.Skip(1).ToList().ForEach(cell =>
+            {
+                index = isOutSide ? index - step : index + step;
+                cell.Y = isHorizontal ? firstCell.Y : index;
+                cell.X = isHorizontal ? index : firstCell.X;
+            });
+            Draw();
         }
     }
 }
