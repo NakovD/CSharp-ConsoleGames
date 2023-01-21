@@ -103,14 +103,15 @@
             var neededCell = availableCells[randomCellIndex];
             var shipStruck = playerGrid.Ships.SingleOrDefault(s => s.Coordinates.Any(c => c.Equals(neededCell)));
             var charToWrite = "O";
+            var colorOfCell = Console.BackgroundColor;
             if (shipStruck != null)
             {
                 charToWrite = "X";
                 shipStruck.Hit();
-                Console.BackgroundColor = ConsoleColor.DarkRed;
+                colorOfCell = ConsoleColor.Red;
             }
             neededCell.Symbol = charToWrite;
-            neededCell.Draw();
+            neededCell.Draw(colorOfCell);
             AIAttackedCells.Add(neededCell);
         }
 
@@ -133,9 +134,7 @@
             if (neededCell == null) return false;
 
             attackMarker.UpdateCoordinates(nextX, nextY);
-            Console.BackgroundColor = ConsoleColor.Magenta;
-            neededCell.Draw();
-            Console.ResetColor();
+            neededCell.Draw(ConsoleColor.Magenta);
             currentCell.Draw();
 
             return false;
@@ -151,8 +150,7 @@
                 shipStruck.Hit();
             }
             currentCell.Symbol = charToWrite;
-            Console.BackgroundColor = ConsoleColor.Magenta;
-            currentCell.Draw();
+            currentCell.Draw(ConsoleColor.Magenta);
 
             Console.ResetColor();
         }
@@ -205,6 +203,7 @@
             ConsoleSetup.Configure();
             Console.InputEncoding = Encoding.Unicode;
             Console.CursorVisible = false;
+            Console.ResetColor();
         }
 
         private List<Ship> GetShips(IReadOnlyDictionary<string, int> boundaries)
@@ -222,25 +221,24 @@
 
         private void PositionShip(Ship ship, Grid playerGrid)
         {
-            var initiallyOverlappingShips = playerGrid.Ships.Where(s => s.Coordinates.Intersect(ship.Coordinates).Any()).ToList();
-            var areThereInitiallyAnyOverlapingships = initiallyOverlappingShips.Any();
-            if (areThereInitiallyAnyOverlapingships)
-            {
-                shipOverlap = true;
-                ship.SetBackgroundColor(ConsoleColor.Red);
-                ship.Draw();
-                ship.SetBackgroundColor();
-                HandleOverlapingShipsDrawing(ship, initiallyOverlappingShips, playerGrid.Ships);
-            }
-            else ship.Draw();
+            ship.Draw(ConsoleColor.Red);
+            var shipOverlaps = !ValidateShipPosition(ship);
+            if (!shipOverlaps) ship.Draw();
 
             while (true)
             {
-                ship.SetBackgroundColor();
-
                 var (_direction, isEnterKey, isSpaceKey) = ReadPressedKey();
 
-                if (isSpaceKey) { ship.Rotate(); continue; }
+                if (isSpaceKey)
+                {
+                    ship.Rotate();
+                    var isShipPositionValid = ValidateShipPosition(ship);
+                    if (!isShipPositionValid) { shipOverlap = true; continue; }
+
+                    shipOverlap = false;
+                    playerGrid.Ships.ForEach(s => s.Draw());
+                    continue;
+                }
 
                 if (isEnterKey)
                 {
@@ -252,25 +250,44 @@
 
                 var direction = (Direction)_direction;
 
-                var nextShipCoordinates = ship.CalculateNextMoveCoordinates(direction);
+                ship.Move(direction);
 
-                var overlappingShips = playerGrid.Ships.Where(s => s.Coordinates.Intersect(nextShipCoordinates).Any()).ToList();
-                var areThereAnyOverlappingShips = overlappingShips.Any();
+                var shipOverlapsAnother = !ValidateShipPosition(ship);
 
-                if (areThereAnyOverlappingShips)
+                if (shipOverlapsAnother)
                 {
                     shipOverlap = true;
-                    ship.SetBackgroundColor(ConsoleColor.Red);
-                    ship.Move(direction);
-                    ship.SetBackgroundColor();
-                    HandleOverlapingShipsDrawing(ship, overlappingShips, playerGrid.Ships);
                     continue;
                 }
 
                 shipOverlap = false;
-                ship.Move(direction);
                 playerGrid.Ships.ForEach(s => s.Draw());
             }
+        }
+
+        private bool ValidateShipPosition(Ship ship)
+        {
+            var overlappedShips = playerGrid.Ships.Where(s => s.Coordinates.Intersect(ship.Coordinates).Any()).ToList();
+
+            if (!overlappedShips.Any()) return true;
+
+            HandleShipOverlapping(ship, overlappedShips);
+
+            return false;
+        }
+
+        private void HandleShipOverlapping(Ship ship, List<Ship> overlappingShips)
+        {
+            ship.Draw(ConsoleColor.Red);
+
+            overlappingShips.ForEach(s =>
+            {
+                var overlappingCells = s.Coordinates.Except(ship.Coordinates).ToList();
+                overlappingCells.ForEach(c => c.Draw(ConsoleColor.Gray));
+            });
+
+            var notOverlappingShips = playerGrid.Ships.Except(overlappingShips).ToList();
+            notOverlappingShips.ForEach(s => s.Draw());
         }
 
         private (Direction? direction, bool isEnterKey, bool isSpaceKey) ReadPressedKey()
@@ -288,16 +305,6 @@
 
             return (null, false, false);
 
-        }
-
-        private void HandleOverlapingShipsDrawing(Ship ship, List<Ship> overlappingShips, List<Ship> allShips)
-        {
-            overlappingShips.ForEach(s =>           //From the overlaping ships draw only the not overlaping cells
-            {
-                s.Coordinates.Except(ship.Coordinates).ToList().ForEach(c => c.Draw());
-            });
-            var notOverlapingShips = allShips.Except(overlappingShips).ToList();
-            notOverlapingShips.ForEach(s => s.Draw());
         }
     }
 }

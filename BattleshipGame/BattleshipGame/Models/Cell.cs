@@ -2,7 +2,7 @@
 {
     using BattleshipGame.Contracts;
 
-    public class Cell : IEquatable<Cell>, IDrawable, IClearable
+    public class Cell : IEquatable<Cell>, IDrawableWithColor, IClearable
     {
         public int X { get; set; }
 
@@ -26,10 +26,17 @@
             Console.BackgroundColor = usedColor;
         }
 
-        public void Draw()
+        private void Draw()
         {
             Console.SetCursorPosition(X, Y);
             Console.Write(Symbol);
+        }
+
+        public void Draw(ConsoleColor backgroundColor = ConsoleColor.Black)
+        {
+            Console.BackgroundColor = backgroundColor;
+            Draw();
+            Console.ResetColor();
         }
 
         public bool Equals(Cell other)

@@ -2,7 +2,7 @@
 {
     using BattleshipGame.Contracts;
 
-    public interface IPlayerShip : IShip, IDrawable, IClearable, IMovable
+    public interface IPlayerShip : IShip, IDrawableWithColor, IClearable, IMovable, IRotatable
     {
         bool IsPositioned { get; }
 
